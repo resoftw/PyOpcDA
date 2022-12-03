@@ -190,15 +190,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="OPC.cpp" />
     <ClCompile Include="OPCCallback.cpp" />
     <ClCompile Include="OPCClient.cpp" />
     <ClCompile Include="OpcDA.cpp" />
+    <ClCompile Include="opc\opccomn_i.c" />
+    <ClCompile Include="opc\opcda_i.c" />
+    <ClCompile Include="opc\OpcEnum_i.c" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OPC.h" />
     <ClInclude Include="OPCClient.h" />
+    <ClInclude Include="opc\opccomn.h" />
+    <ClInclude Include="opc\opcda.h" />
+    <ClInclude Include="opc\OpcEnum.h" />
+    <ClInclude Include="opc\opcerror.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

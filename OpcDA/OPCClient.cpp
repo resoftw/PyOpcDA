@@ -1,11 +1,60 @@
 #include "OPCClient.h"
 #define _CRTDBG_MAP_ALLOC
 
+HRESULT InitSecurity(std::string d,std::string u,std::string p)
+{
+	//CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	OleInitialize(NULL);
+	std::wstring usr(u.begin(), u.end());
+	std::wstring pas(p.begin(), p.end());
+	std::wstring dom(d.begin(), d.end());
+	
+	SEC_WINNT_AUTH_IDENTITY_W authidentity;
+	SecureZeroMemory(&authidentity, sizeof(authidentity));
+
+	authidentity.User = (unsigned short*)usr.c_str();
+	authidentity.UserLength = usr.length();
+	authidentity.Domain = (unsigned short*)dom.c_str();
+	authidentity.DomainLength = dom.length();
+	authidentity.Password = (unsigned short*)pas.c_str();
+	authidentity.PasswordLength = pas.length();
+	authidentity.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+
+	SOLE_AUTHENTICATION_INFO         authninfo[2];
+	SecureZeroMemory(authninfo, sizeof(SOLE_AUTHENTICATION_INFO) * 2);
+
+	// NTLM Settings
+	authninfo[0].dwAuthnSvc = RPC_C_AUTHN_WINNT;
+	authninfo[0].dwAuthzSvc = RPC_C_AUTHZ_NONE;
+	authninfo[0].pAuthInfo = &authidentity;
+
+	// Kerberos Settings
+	authninfo[1].dwAuthnSvc = RPC_C_AUTHN_GSS_KERBEROS;
+	authninfo[1].dwAuthzSvc = RPC_C_AUTHZ_NONE;
+	authninfo[1].pAuthInfo = &authidentity;
+
+	SOLE_AUTHENTICATION_LIST    authentlist;
+
+	authentlist.cAuthInfo = 2;
+	authentlist.aAuthInfo = authninfo;
+
+	HRESULT hr = CoInitializeSecurity(
+		NULL,
+		-1,
+		NULL,
+		NULL,
+		RPC_C_AUTHN_LEVEL_CALL,
+		RPC_C_IMP_LEVEL_IMPERSONATE,
+		&authentlist,
+		EOAC_NONE,
+		NULL);
+	return hr;
+}
 
 
 OPCClient::OPCClient() {
-	szHostName = NULL;
-	szProgID = NULL;
+	HostName = L"";
+	ProgID = L"";
 	ipServer = NULL;
 	ipSyncIO = NULL;
 	ipGroup = NULL;
@@ -22,11 +71,12 @@ OPCClient::~OPCClient()
 
 void OPCClient::Error(std::string msg, long err)
 {
-	std::cerr << msg << " Error: 0x" << std::setfill('0') << std::setw(8) << std::hex << err << std::endl;
+	fprintf(stderr, "%s Error: 0x%08x\n", msg.c_str(), err);
 }
 void OPCClient::Error(std::wstring msg, long err)
 {
-	std::wcerr << msg << " Error: 0x" << std::setfill('0') << std::setw(8) << std::hex << err << std::endl;
+	std::string s(msg.begin(), msg.end());
+	fprintf(stderr, "%s wError: 0x%08x\n", s.c_str(), err);
 }
 
 std::string OPCClient::CheckStatus()
@@ -138,7 +188,7 @@ void OPCClient::Reconnect()
 {
 	Disconnect();
 	Sleep(3000);//wait for 3secs
-	Connect(szHostName, szProgID);
+	Connect((LPWSTR)HostName.c_str(), (LPWSTR)ProgID.c_str());
 	//std::vector<std::wstring> it;
 	//it.swap(*itemids);
 	//AddItems(it);
@@ -212,8 +262,11 @@ HRESULT GetCLSID(LPWSTR host, LPWSTR prog, CLSID &opcid)
 
 HRESULT OPCClient::Connect(LPWSTR host, LPWSTR prog) 
 {
-	szProgID = prog;
-	szHostName = host;
+	if (_connected) return -1;
+	LPWSTR szProgID = prog;
+	LPWSTR szHostName = host;
+	HostName = host;
+	ProgID = prog;
 	HRESULT hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	if (FAILED(hResult)) {
 		Error("CoInitializeEx failed",hResult);
@@ -225,7 +278,7 @@ HRESULT OPCClient::Connect(LPWSTR host, LPWSTR prog)
 	if (FAILED(hResult))
 	{
 		if (UuidFromString((RPC_WSTR)szProgID, &cClsid) != RPC_S_OK) {
-			Error("Could not resolve Prog ID/CLSID: "+(wchar_t)szProgID,hResult);
+			Error(L"Could not resolve Prog ID/CLSID: "+ std::wstring(szProgID) ,hResult);
 			return (HRESULT)-1;
 		}
 	}
@@ -261,7 +314,7 @@ HRESULT OPCClient::Connect(LPWSTR host, LPWSTR prog)
 		return hResult;
 	}
 
-	std::cout << "Connected to " <<szProgID <<"@"<<szHostName<<std::endl;
+	printf("Connected to %ls@%ls\n", szProgID, szHostName);
 	_connected = true;
 	return S_OK;
 }
@@ -278,7 +331,7 @@ void OPCClient::Disconnect()
 	ipGroup = NULL;
 	hGroup = NULL;
 	ipServer = NULL;
-	std::cout <<"Disconnected from "<<szProgID<<"@"<<szHostName<<std::endl;
+	printf("Disconnected from %ls@%ls\n",ProgID.c_str(), HostName.c_str());
 	_connected = false;
 }
 

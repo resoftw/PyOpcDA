@@ -18,9 +18,6 @@
     <ClCompile Include="OpcDA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OPC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="OPCCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,16 +27,34 @@
     <ClCompile Include="Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="opc\opccomn_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opc\opcda_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opc\OpcEnum_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OPC.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="OPCClient.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opc\opccomn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opc\opcda.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opc\OpcEnum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opc\opcerror.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -96,13 +96,13 @@ public:
 };
 
 
-
+HRESULT InitSecurity(std::string d, std::string u, std::string p);
 
 class OPCClient
 {
 private:
-	LPWSTR szProgID;
-	LPWSTR szHostName;
+	std::wstring HostName;
+	std::wstring ProgID;
 	IOPCServer* ipServer;
 	IOPCItemMgt* ipGroup;
 	IOPCSyncIO* ipSyncIO;

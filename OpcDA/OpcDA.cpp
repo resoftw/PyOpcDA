@@ -22,29 +22,49 @@ Disconnect from OPC Server");
 
 static OPCClient *_OPC = nullptr;
 
-PyObject *OpcDA_setint(PyObject *self, PyObject *args, PyObject *kwargs) {
+PyObject *OpcDA_init(PyObject *self, PyObject *args, PyObject *kwargs) {
     /* Shared references that do not need Py_DECREF before returning. */
-    int number = 0;
-
+    char* d = NULL, * u = NULL, * p = NULL;
     /* Parse positional and keyword arguments */
-    static char* keywords[] = { "obj", "number", NULL };
-    if (!PyArg_ParseTuple(args, "i:setint", &number)) {
-        return NULL;
+    if (!PyArg_ParseTuple(args, "sss:Init", &d,&u,&p)) {
+        return PyLong_FromLong(-1);
     }
-    __val = number;
+    return PyLong_FromLong(InitSecurity(d, u, p));
+}
+
+PyObject* OpcDA_connect(PyObject* self,PyObject *args) {
+    char* h = NULL, * p = NULL;
+    if (!PyArg_ParseTuple(args, "ss:Init", &h, &p)) {
+        return PyLong_FromLong(-1);
+    }
+    wchar_t hst[256];
+    wchar_t prg[256];
+    mbstowcs(hst, h, 256);
+    mbstowcs(prg, p, 256);
+    if (_OPC == NULL) {
+        _OPC = new OPCClient();
+    }
+
+    long r=_OPC->Connect(hst, prg);
+    return PyLong_FromLong(r);
+}
+
+PyObject* OpcDA_disconnect(PyObject* self) {
+    if (_OPC == NULL) return PyLong_FromLong(0);
+    _OPC->Disconnect();
     Py_RETURN_NONE;
 }
 
-PyObject* OpcDA_getint(PyObject* self) {
-    return PyLong_FromLong(__val);
-}
+PyObject* OpcDA_additem(PyObject* self,PyObject *args) {
 
+}
 /*
  * List of functions to add to OpcDA in exec_OpcDA().
  */
 static PyMethodDef OpcDA_functions[] = {
-    { "setint", (PyCFunction)OpcDA_setint, METH_VARARGS, OpcDA_setint_doc },
-    { "getint", (PyCFunction)OpcDA_getint, METH_NOARGS, OpcDA_getint_doc },
+    { "Init", (PyCFunction)OpcDA_init, METH_VARARGS, OpcDA_init_doc },
+    { "Connect", (PyCFunction)OpcDA_connect, METH_VARARGS, OpcDA_connect_doc },
+    { "Disconnect", (PyCFunction)OpcDA_disconnect, METH_VARARGS, OpcDA_disconnect_doc },
     { NULL, NULL, 0, NULL } /* marks end of array */
 };
 

@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <combaseapi.h>
 
-HRESULT GetCLSID(LPWSTR host, LPWSTR prog, CLSID *opcid)
+HRESULT GetCLSID(LPWSTR host, LPWSTR prog, CLSID &opcid)
 {
 	IOPCServerList* m_spServerList = NULL;
 	IOPCServerList2* m_spServerList2 = NULL;
