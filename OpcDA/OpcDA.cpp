@@ -15,9 +15,9 @@ PyDoc_STRVAR(OpcDA_disconnect_doc, "Disconnect()\
 \
 Disconnect from OPC Server");
 
-PyDoc_STRVAR(OpcDA_additems_doc, "AddItem(item)\
+PyDoc_STRVAR(OpcDA_additem_doc, "AddItem(item)\
 \
-Disconnect from OPC Server");
+Add Item");
 
 
 static OPCClient *_OPC = nullptr;
@@ -56,7 +56,20 @@ PyObject* OpcDA_disconnect(PyObject* self) {
 }
 
 PyObject* OpcDA_additem(PyObject* self,PyObject *args) {
-
+    if (!_OPC) return PyTuple_Pack(2, PyBool_FromLong(0), Py_None);
+    char* n = NULL;
+    if (!PyArg_ParseTuple(args, "s:AddItem", &n)) {
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("ParseTUpler!"));
+    }
+    OpcItem o;
+    if (_OPC->AddItem(1, std::string(n), VT_EMPTY, o)==S_OK) {
+        return PyTuple_Pack(2, PyBool_FromLong(1),
+            PyTuple_Pack(2,
+                PyUnicode_FromString(VarTypeStr(o.DataType).c_str()),
+                PyUnicode_FromString(o.ItemID.c_str()), 
+                PyLong_FromLong(o.Handle)));
+    }
+    else return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Error adding!"));
 }
 /*
  * List of functions to add to OpcDA in exec_OpcDA().
@@ -65,6 +78,7 @@ static PyMethodDef OpcDA_functions[] = {
     { "Init", (PyCFunction)OpcDA_init, METH_VARARGS, OpcDA_init_doc },
     { "Connect", (PyCFunction)OpcDA_connect, METH_VARARGS, OpcDA_connect_doc },
     { "Disconnect", (PyCFunction)OpcDA_disconnect, METH_VARARGS, OpcDA_disconnect_doc },
+    { "AddItem", (PyCFunction)OpcDA_additem, METH_VARARGS, OpcDA_additem_doc },
     { NULL, NULL, 0, NULL } /* marks end of array */
 };
 
