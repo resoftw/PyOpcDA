@@ -1,4 +1,6 @@
 #include <Python.h>
+#include <datetime.h>
+
 #include "OPCClient.h"
 
 /*
@@ -19,8 +21,14 @@ PyDoc_STRVAR(OpcDA_additem_doc, "AddItem(item)\
 \
 Add Item");
 
+PyDoc_STRVAR(OpcDA_readitem_doc, "ReadItem(item)\
+\
+Read Item \
+item: item handle");
+
 
 static OPCClient *_OPC = nullptr;
+static int _nitems = 0;
 
 PyObject *OpcDA_init(PyObject *self, PyObject *args, PyObject *kwargs) {
     /* Shared references that do not need Py_DECREF before returning. */
@@ -46,6 +54,7 @@ PyObject* OpcDA_connect(PyObject* self,PyObject *args) {
     }
 
     long r=_OPC->Connect(hst, prg);
+    _nitems = 0;
     return PyLong_FromLong(r);
 }
 
@@ -62,14 +71,30 @@ PyObject* OpcDA_additem(PyObject* self,PyObject *args) {
         return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("ParseTUpler!"));
     }
     OpcItem o;
-    if (_OPC->AddItem(1, std::string(n), VT_EMPTY, o)==S_OK) {
+    if (_OPC->AddItem(_nitems+1, std::string(n), VT_EMPTY, o)==S_OK) {
+        _nitems++;
         return PyTuple_Pack(2, PyBool_FromLong(1),
-            PyTuple_Pack(2,
+            PyTuple_Pack(3,
                 PyUnicode_FromString(VarTypeStr(o.DataType).c_str()),
                 PyUnicode_FromString(o.ItemID.c_str()), 
                 PyLong_FromLong(o.Handle)));
     }
     else return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Error adding!"));
+}
+
+PyObject* OpcDA_readitem(PyObject* self, PyObject* args) {
+    OPCHANDLE opch = 0;
+    if (!PyArg_ParseTuple(args, "k:ReadItem", &opch))
+    {
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Invalid parameter!"));
+    }
+    OpcData d;
+    HRESULT h = _OPC->ReadItem(opch, d);
+    if (h == S_OK) {
+        return PyTuple_Pack(2, PyBool_FromLong(1), PyFloat_FromDouble(d.Value.dblVal));
+    }
+    else
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyLong_FromLong(h));
 }
 /*
  * List of functions to add to OpcDA in exec_OpcDA().
@@ -79,6 +104,7 @@ static PyMethodDef OpcDA_functions[] = {
     { "Connect", (PyCFunction)OpcDA_connect, METH_VARARGS, OpcDA_connect_doc },
     { "Disconnect", (PyCFunction)OpcDA_disconnect, METH_VARARGS, OpcDA_disconnect_doc },
     { "AddItem", (PyCFunction)OpcDA_additem, METH_VARARGS, OpcDA_additem_doc },
+    { "ReadItem", (PyCFunction)OpcDA_readitem, METH_VARARGS, OpcDA_readitem_doc },
     { NULL, NULL, 0, NULL } /* marks end of array */
 };
 
@@ -120,5 +146,6 @@ static PyModuleDef OpcDA_def = {
 };
 
 PyMODINIT_FUNC PyInit_OpcDA() {
+    PyDateTime_IMPORT;
     return PyModuleDef_Init(&OpcDA_def);
 }

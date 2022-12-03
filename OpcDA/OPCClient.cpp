@@ -468,13 +468,22 @@ HRESULT OPCClient::RemoveAllItems()
 	return itemids.empty() ? S_OK : S_FALSE;
 }
 
-HRESULT OPCClient::ReadItem(std::string itemid, OpcData& out)
+HRESULT OPCClient::ReadItem(OPCHANDLE item, OpcData& out)
 {
-	OPCHANDLE opch;
-	if (itemids.count(itemid) == 0)
-	{
-		//Add item
+	HRESULT* err=NULL;
+	OPCITEMSTATE* val=NULL;
+	HRESULT hr = ipSyncIO->Read(OPC_DS_DEVICE, 1, &item, &val, &err);
+	if (hr == S_OK) {
+		time_t tm = filetime_to_timet(val[0].ftTimeStamp);
+		out.Timestamp = tm;
+		out.Handle = val[0].hClient;
+		out.Quality = val[0].wQuality;
+		out.Value = val[0].vDataValue;
 	}
+	CoTaskMemFree(err);
+	VariantClear(&val[0].vDataValue);
+	CoTaskMemFree(val);
+	return hr;
 }
 
 HRESULT OPCClient::ReadItems()
@@ -573,3 +582,20 @@ HRESULT OPCClient::Write(OpcItem const& item, VARIANT& value)
 	return hr;
 }
 
+HRESULT OPCClient::Write(OPCHANDLE item, VARIANT& value)
+{
+	HRESULT hr;
+	HRESULT* errors = nullptr;
+	hr = ipSyncIO->Write(1, &item, &value, &errors);
+
+	if (hr != S_OK || &value == nullptr)
+	{
+		return hr;
+	}
+
+	//Release memeory allocated by the OPC server:
+	CoTaskMemFree(errors);
+	errors = nullptr;
+
+	return hr;
+}
