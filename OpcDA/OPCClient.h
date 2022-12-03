@@ -127,6 +127,7 @@ public:
 	HRESULT RemoveItem(OpcItem const& item);
 	HRESULT RemoveAllItems();
 	HRESULT ReadItems();
+	HRESULT ReadItem(std::string itemid, OpcData& out);
 	HRESULT Write(OpcItem const& item, VARIANT& value);
 };
 

@@ -468,6 +468,15 @@ HRESULT OPCClient::RemoveAllItems()
 	return itemids.empty() ? S_OK : S_FALSE;
 }
 
+HRESULT OPCClient::ReadItem(std::string itemid, OpcData& out)
+{
+	OPCHANDLE opch;
+	if (itemids.count(itemid) == 0)
+	{
+		//Add item
+	}
+}
+
 HRESULT OPCClient::ReadItems()
 {
 	int nt = itemids.size();
