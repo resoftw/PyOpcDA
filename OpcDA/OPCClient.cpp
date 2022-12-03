@@ -268,7 +268,7 @@ HRESULT OPCClient::Connect(LPWSTR host, LPWSTR prog)
 	HostName = host;
 	ProgID = prog;
 	HRESULT hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-	if (FAILED(hResult)) {
+	if (FAILED(hResult) && hResult!= RPC_E_CHANGED_MODE) {
 		Error("CoInitializeEx failed",hResult);
 		return hResult;
 	}
