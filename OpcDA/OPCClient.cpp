@@ -299,7 +299,7 @@ HRESULT OPCClient::Connect(LPWSTR host, LPWSTR prog)
 	}
 	ipServer = (IOPCServer*)cResults.pItf;
 	DWORD dwRevisedUpdateRate = 0;
-	hResult = ipServer->AddGroup(L"", true, 1000, NULL, NULL, NULL, LOCALE_SYSTEM_DEFAULT, &hGroup, &dwRevisedUpdateRate, IID_IOPCItemMgt, (IUnknown**)&ipGroup);
+	hResult = ipServer->AddGroup(L"PYOPCDA", true, 1000, NULL, NULL, NULL, LOCALE_SYSTEM_DEFAULT, &hGroup, &dwRevisedUpdateRate, IID_IOPCItemMgt, (IUnknown**)&ipGroup);
 	if (FAILED(hResult)) {
 		ipServer->Release();
 		Error("Add Group failed",hResult);
