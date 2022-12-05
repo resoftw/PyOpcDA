@@ -94,7 +94,28 @@ PyObject* OpcDA_readitem(PyObject* self, PyObject* args) {
     OpcData d;
     HRESULT h = _OPC->ReadItem(opch, d);
     if (h == S_OK) {
-        return PyTuple_Pack(2, PyBool_FromLong(1), PyFloat_FromDouble(d.Value.dblVal));
+        PyObject* v;
+        switch (d.Value.vt)
+        {
+            case VT_R4:
+                v = PyFloat_FromDouble(d.Value.fltVal);
+                break;
+            case VT_R8:
+                v = PyFloat_FromDouble(d.Value.dblVal);
+                break;
+            case VT_I1:
+            case VT_I2:
+            case VT_I4:
+            case VT_I8:
+                v = PyFloat_FromDouble(d.Value.intVal);
+                break;
+            case VT_BOOL:
+                v = PyBool_FromLong(d.Value.boolVal);
+                break;
+            default:
+                v = PyUnicode_FromString("Unknown Datatype!");
+        }
+        return PyTuple_Pack(2, PyBool_FromLong(1), v);
     }
     else
         return PyTuple_Pack(2, PyBool_FromLong(0), PyLong_FromLong(h));
@@ -102,14 +123,23 @@ PyObject* OpcDA_readitem(PyObject* self, PyObject* args) {
 
 PyObject* OpcDA_writeitem(PyObject* self, PyObject* args) {
     OPCHANDLE opch = 0;
-    double v = 0.0;
-    if (!PyArg_ParseTuple(args, "kd:ReadItem", &opch,&v))
+    PyObject* v;
+    if (!PyArg_ParseTuple(args, "kO:WriteItem", &opch,&v))
     {
         return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Invalid parameter!"));
     }
     VARIANT val{};
-    val.dblVal=v;
-    val.vt = VT_R8;
+    if (PyNumber_Check(v)) {
+        val.dblVal = PyFloat_AsDouble(v);
+        val.vt = VT_R8;
+    }
+    else if (PyBool_Check(v)) {
+        val.boolVal = v == Py_True;
+        val.vt = VT_BOOL;
+    }
+    else {
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Unsupported type!"));
+    }
     //printf("Value: %g\n", v);
     HRESULT h = _OPC->Write(opch, val);
     if (h == S_OK) {
