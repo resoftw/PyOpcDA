@@ -1,6 +1,5 @@
 #include <Python.h>
 #include <datetime.h>
-
 #include "OPCClient.h"
 
 /*
@@ -26,6 +25,10 @@ PyDoc_STRVAR(OpcDA_readitem_doc, "ReadItem(item)\
 Read Item \
 item: item handle");
 
+PyDoc_STRVAR(OpcDA_writeitem_doc, "WriteItem(item)\
+\
+Write Item \
+item: item handle");
 
 static OPCClient *_OPC = nullptr;
 static int _nitems = 0;
@@ -96,6 +99,26 @@ PyObject* OpcDA_readitem(PyObject* self, PyObject* args) {
     else
         return PyTuple_Pack(2, PyBool_FromLong(0), PyLong_FromLong(h));
 }
+
+PyObject* OpcDA_writeitem(PyObject* self, PyObject* args) {
+    OPCHANDLE opch = 0;
+    double v = 0.0;
+    if (!PyArg_ParseTuple(args, "kd:ReadItem", &opch,&v))
+    {
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyUnicode_FromString("Invalid parameter!"));
+    }
+    VARIANT val{};
+    val.dblVal=v;
+    val.vt = VT_R8;
+    //printf("Value: %g\n", v);
+    HRESULT h = _OPC->Write(opch, val);
+    if (h == S_OK) {
+        return PyTuple_Pack(2, PyBool_FromLong(1), Py_None);
+    }
+    else
+        return PyTuple_Pack(2, PyBool_FromLong(0), PyLong_FromLong(h));
+}
+
 /*
  * List of functions to add to OpcDA in exec_OpcDA().
  */
@@ -105,6 +128,7 @@ static PyMethodDef OpcDA_functions[] = {
     { "Disconnect", (PyCFunction)OpcDA_disconnect, METH_VARARGS, OpcDA_disconnect_doc },
     { "AddItem", (PyCFunction)OpcDA_additem, METH_VARARGS, OpcDA_additem_doc },
     { "ReadItem", (PyCFunction)OpcDA_readitem, METH_VARARGS, OpcDA_readitem_doc },
+    { "WriteItem", (PyCFunction)OpcDA_writeitem, METH_VARARGS, OpcDA_writeitem_doc },
     { NULL, NULL, 0, NULL } /* marks end of array */
 };
 
