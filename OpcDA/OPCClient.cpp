@@ -590,6 +590,7 @@ HRESULT OPCClient::Write(OPCHANDLE item, VARIANT& value)
 
 	if (hr != S_OK || &value == nullptr)
 	{
+		Error("Write Error " + (int)item, hr);
 		return hr;
 	}
 
