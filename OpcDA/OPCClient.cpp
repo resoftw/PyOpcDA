@@ -559,12 +559,12 @@ HRESULT OPCClient::Write(OpcItem const& item, VARIANT& value)
 	if (itemids.count(item.ItemID) == 0)
 	{
 		Error("Write: " + item.ItemID + " not found!", -1);
-		return S_FALSE;
+		return 1;
 	}
 	OpcItem towrite = itemids[item.ItemID];
 	if (towrite.Handle != item.Handle) {
 		std::cerr << "Write item : Item handle does not match! " << item.ItemID << item.Handle << " to " << towrite.Handle;
-		return S_FALSE;
+		return 2;
 	}
 	HRESULT* errors = nullptr;
 	hr = ipSyncIO->Write(1, const_cast<OPCHANDLE*>(&towrite.Handle), &value, &errors);
